@@ -267,10 +267,10 @@ storepre=distinct(select(skup,sid),sid)
 
 # mark the status
 storecur$status=gstatus[1]
-storecur[which(!(storecur$gid %in% storepre$gid)),"status"]=gstatus[2]
+storecur[which(!(storecur$sid %in% storepre$sid)),"status"]=gstatus[2]
 #table(storecur$status)
 storepre$status=gstatus[1]
-storepre[which(!(storepre$gid %in% storecur$gid)),"status"]=gstatus[3]
+storepre[which(!(storepre$sid %in% storecur$sid)),"status"]=gstatus[3]
 #table(storepre$status)
 #head(as.data.frame(filter(storecur,status==gstatus[2])),100)
 
@@ -284,6 +284,16 @@ storecursum=summarise(storecur,date=first(date),nstore=n(),storeratio=n()/nrow(s
                       GMV=sum(GMV),meanGMV=sum(GMV)/n(),GMVratio=sum(GMV)/totGMV,
                       totlikes=sum(totlikes),newlikes=sum(newlikes),meannewlikes=sum(newlikes)/n()
 )
+
+n=nrow(storecursum)+1
+storecursum[n,]=NA
+storecursum[n,3:ncol(storecursum)]=apply(storecursum[1:n-1,3:ncol(storecursum)],2,sum)
+#storecursum[3,"status"]=factor("tot")
+storecursum[n,"date"]=first(storecur$date)
+storecursum[n,"meanndpstore"]=mean(storecur$newdeals,na.rm=T)
+storecursum[n,"meanGMV"]=mean(storecur$GMV,na.rm=T)
+storecursum[n,"meannewlikes"]=mean(storecur$newlikes,na.rm=T)
+
 #storecur
 #as.data.frame(storecursum)
 knitr::kable(as.data.frame(storecursum),caption="Store Summary By Status Table")
@@ -385,9 +395,9 @@ totnewgoods=sum(hdb$newgoods)
 totsumgoods=sum(hdb$ngoods.x)
 totnewdeals=sum(hdb$newsales)
 totnewlikes=sum(hdb$newlikes)
-hdbgrade=summarise(hdb,date=first(date),nstore=n(),goodsratio=n()/nrow(hdb),
+hdbgrade=summarise(hdb,date=first(date),nstore=n(),nstoreratio=n()/nrow(hdb),
                    totgoods=sum(ngoods.x),mtotgoods=sum(ngoods.x)/n(),totgoodsratio=sum(ngoods.x)/totsumgoods,
-                   newgoods=sum(newgoods),mnewgoods=sum(newgoods)/n(),goodsratio=sum(newgoods)/totnewgoods,
+                   newgoods=sum(newgoods),mnewgoods=sum(newgoods)/n(),newgoodsratio=sum(newgoods)/totnewgoods,
                    totdeals=sum(sales.x),newdeals=sum(newsales),meandeals=sum(newsales)/n(),dealratio=sum(newsales)/totnewdeals,
                    totlikes=sum(likes.x),newlikes=sum(newlikes),meanlikes=sum(newlikes)/n(),likeratio=sum(newlikes)/totnewlikes
 )
@@ -409,6 +419,7 @@ knitr::kable(as.data.frame(hdbgrade),caption="Haodian Summary By Grade Table")
 
 top10=head(as.data.frame(hdb[order(-hdb$grade),]),10)
 knitr::kable(as.data.frame(top10),caption="Haodian Grade Top10 Table")
+
 
 
 
